@@ -2,11 +2,12 @@
 
 import eslint from "@eslint/js";
 import tseslint from "typescript-eslint";
-import perfectionist from "eslint-plugin-perfectionist";
+import perfectionist, { rules } from "eslint-plugin-perfectionist";
 
 export default tseslint.config(
   {
     ignores: ["**/*.js"],
+    // rules: { "perfectionist/sort-object-types": "off" },
   },
   eslint.configs.recommended,
   tseslint.configs.strictTypeChecked,
