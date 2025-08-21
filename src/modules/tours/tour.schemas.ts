@@ -1,4 +1,3 @@
-// src/modules/tours/tour.schema.ts
 import { z } from "zod";
 
 export const TourSchema = z.object({
@@ -13,7 +12,14 @@ export const TourSchema = z.object({
   description: z.string(),
   imageCover: z.string(),
   images: z.array(z.string()),
-  startDates: z.array(z.string()), // could refine date format if needed
+  startDates: z.array(z.string()),
+});
+
+export const tourParamsSchema = z.object({
+  id: z
+    .string()
+    .regex(/^\d+$/, "ID must be a number") // validate numeric string
+    .transform((val) => parseInt(val, 10)), // optional: convert to number
 });
 
 export type Tour = z.infer<typeof TourSchema> & { id: number };

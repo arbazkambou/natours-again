@@ -1,40 +1,16 @@
-import { readJsonFile, writeToJsonFile } from "#helpers/file-helpers.js";
-import { Tour, TourSchema } from "#modules/tours/tours.schemas.js";
+import { tourRouter } from "#modules/tours/tour.routes.js";
+import { userRouter } from "#modules/users/user.routes.js";
 import express from "express";
-import z from "zod";
+import morgan from "morgan";
 
 const app = express();
-const port = process.env.PORT ?? "9001";
 
+//1.Middleware
+app.use(morgan("dev"));
 app.use(express.json());
 
-const tours = readJsonFile("src/dev-data/data/tours-simple.json") as Tour[];
+//2.Routes
+app.use("/tours", tourRouter);
+app.use("/users", userRouter);
 
-app.get("/tours", (req, res) => {
-  res.status(200).json({ status: true, data: { tours } });
-  console.log("Response sent");
-});
-
-app.post("/tours", async (req, res) => {
-  const parsed = TourSchema.safeParse(req.body);
-
-  if (!parsed.success) {
-    return res.status(400).json({ status: false, errors: parsed.error.issues.map((error) => `${error.path}: ${error.message}`) });
-  }
-
-  const newTour: Tour = { id: tours[tours.length - 1].id, ...parsed.data };
-  tours.push(newTour);
-
-  await writeToJsonFile("src/dev-data/data/tours-simple.json", tours);
-
-  res.status(201).json({
-    status: true,
-    data: {
-      tour: newTour,
-    },
-  });
-});
-
-app.listen(port, () => {
-  console.log(`App listening on port ${port}`);
-});
+export { app };
