@@ -1,8 +1,7 @@
-import { readJsonFile, writeToJsonFile } from "#helpers/file-helpers.js";
-import { formatZodError } from "#helpers/formate-zod-error.js";
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import { Tour, tourParamsSchema, TourSchema } from "./tour.schemas.js";
+import { Tour, TourBodySchema, tourParamsSchema } from "./tour.schemas.js";
+import { formatZodError, readJsonFile, writeToJsonFile } from "#helpers/helpers.js";
 
 const tours = readJsonFile("src/dev-data/data/tours-simple.json") as Tour[];
 
@@ -29,7 +28,7 @@ export function getTour(req: Request, res: Response) {
 }
 
 export async function createTour(req: Request, res: Response) {
-  const parsed = TourSchema.safeParse(req.body);
+  const parsed = TourBodySchema.safeParse(req.body);
   const { success, error } = parsed;
 
   if (!success) {
@@ -44,14 +43,9 @@ export async function createTour(req: Request, res: Response) {
 }
 
 export function updateTour(req: Request, res: Response) {
-  const parsed = tourParamsSchema.safeParse(req.params);
-  const { success, data, error } = parsed;
+  const { id } = req.params;
 
-  if (!success) {
-    return res.status(StatusCodes.BAD_REQUEST).json({ status: false, errors: formatZodError(error) });
-  }
-
-  const tour = tours.find((tour) => tour.id === data?.id);
+  const tour = tours.find((tour) => tour.id === Number(id));
 
   if (!tour) {
     return res.status(StatusCodes.NOT_FOUND).json({ status: false, message: "No tour found with that id" });

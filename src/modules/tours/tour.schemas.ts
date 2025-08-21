@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const TourSchema = z.object({
+export const TourBodySchema = z.object({
   name: z.string().min(3),
   duration: z.number().positive(),
   maxGroupSize: z.number().positive(),
@@ -22,4 +22,9 @@ export const tourParamsSchema = z.object({
     .transform((val) => parseInt(val, 10)), // optional: convert to number
 });
 
-export type Tour = z.infer<typeof TourSchema> & { id: number };
+export const TourSchema = z.object({
+  body: TourBodySchema,
+  params: tourParamsSchema,
+});
+
+export type Tour = z.infer<typeof TourBodySchema> & { id: number };

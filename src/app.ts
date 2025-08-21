@@ -6,8 +6,12 @@ import morgan from "morgan";
 const app = express();
 
 //1.Middleware
-app.use(morgan("dev"));
+if (process.env.NODE_ENV === "developement") {
+  app.use(morgan("dev"));
+}
+
 app.use(express.json());
+app.use(express.static("public"));
 
 //2.Routes
 app.use("/tours", tourRouter);
