@@ -2,38 +2,41 @@ import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { Tour } from "./tour.model.js";
 import { allowedTourFilters, TourBody, TourQuery } from "./tour.schemas.js";
-import { buildFilters } from "#helpers/helpers.js";
-import { paginate } from "#helpers/paginate.js";
+import { APIFeatures } from "#helpers/apiFeatures.js";
 
 export async function getTours(req: Request, res: Response) {
   try {
     const queryData = req.validated?.query as TourQuery;
 
-    //1.skip the pagination and sorting fileds and get filters
-    const { page, limit, sort, fields, ...filtersObj } = queryData;
+    const apiFeatures = new APIFeatures(Tour, queryData).filter(allowedTourFilters).limitFields();
 
-    //2.build filters
-    const filters = buildFilters(filtersObj, allowedTourFilters);
+    const { data: tours, pagination } = await apiFeatures.paginate();
 
-    //3.build the query object by injecting filters
-    let query = Tour.find(filters);
+    // //1.skip the pagination and sorting fileds and get filters
+    // const { page, limit, sort, fields, ...filtersObj } = queryData;
 
-    //4. perform sorting if any
-    if (sort) {
-      const sortBy = sort.replaceAll(",", " ");
-      query = query.sort(sortBy);
-    }
+    // //2.build filters
+    // const filters = buildFilters(filtersObj, allowedTourFilters);
 
-    //5. limiting the fields
-    if (fields) {
-      const limitsByFields = fields.replaceAll(",", " ");
-      query.select(limitsByFields);
-    } else {
-      query.select("-__v");
-    }
+    // //3.build the query object by injecting filters
+    // let query = Tour.find(filters);
 
-    //6. Pagination
-    const { data: tours, pagination } = await paginate(Tour, { query, limit, page, filters });
+    // //4. perform sorting if any
+    // if (sort) {
+    //   const sortBy = sort.replaceAll(",", " ");
+    //   query = query.sort(sortBy);
+    // }
+
+    // //5. limiting the fields
+    // if (fields) {
+    //   const limitsByFields = fields.replaceAll(",", " ");
+    //   query.select(limitsByFields);
+    // } else {
+    //   query.select("-__v");
+    // }
+
+    // //6. Pagination
+    // const { data: tours, pagination } = await paginate(Tour, { query, limit, page, filters });
 
     return res.status(StatusCodes.OK).json({ status: true, data: { tours, pagination } });
   } catch (error) {
