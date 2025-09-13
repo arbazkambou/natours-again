@@ -1,59 +1,103 @@
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import { Tour, TourBodySchema, tourParamsSchema } from "./tour.schemas.js";
-import { formatZodError, readJsonFile, writeToJsonFile } from "#helpers/helpers.js";
+import { Tour } from "./tour.model.js";
+import { allowedTourFilters, TourBody, TourQuery } from "./tour.schemas.js";
+import { buildFilters } from "#helpers/helpers.js";
+import { paginate } from "#helpers/paginate.js";
 
-const tours = readJsonFile("src/dev-data/data/tours-simple.json") as Tour[];
+export async function getTours(req: Request, res: Response) {
+  try {
+    const queryData = req.validated?.query as TourQuery;
 
-export function getTours(req: Request, res: Response) {
-  return res.status(StatusCodes.OK).json({ status: true, data: { tours } });
+    //1.skip the pagination and sorting fileds and get filters
+    const { page, limit, sort, fields, ...filtersObj } = queryData;
+
+    //2.build filters
+    const filters = buildFilters(filtersObj, allowedTourFilters);
+
+    //3.build the query object by injecting filters
+    let query = Tour.find(filters);
+
+    //4. perform sorting if any
+    if (sort) {
+      const sortBy = sort.replaceAll(",", " ");
+      query = query.sort(sortBy);
+    }
+
+    //5. limiting the fields
+    if (fields) {
+      const limitsByFields = fields.replaceAll(",", " ");
+      query.select(limitsByFields);
+    } else {
+      query.select("-__v");
+    }
+
+    //6. Pagination
+    const { data: tours, pagination } = await paginate(Tour, { query, limit, page, filters });
+
+    return res.status(StatusCodes.OK).json({ status: true, data: { tours, pagination } });
+  } catch (error) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ status: false, errors: error });
+  }
 }
 
-export function getTour(req: Request, res: Response) {
-  const parsed = tourParamsSchema.safeParse(req.params);
+export async function getTour(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
 
-  if (!parsed.success) {
-    return res.status(StatusCodes.BAD_REQUEST).json({ status: false, errors: formatZodError(parsed.error), message: parsed.error.message });
-  }
+    const tour = await Tour.findById(id);
 
-  const { id } = parsed.data;
+    if (!tour) {
+      return res.status(StatusCodes.NOT_FOUND).json({ status: false, message: "No tour found with that id" });
+    }
 
-  const tour = tours.find((tour) => tour.id === id);
-
-  if (tour) {
     return res.status(StatusCodes.OK).json({ status: true, data: { tour } });
+  } catch (error) {
+    return res.status(StatusCodes.NOT_FOUND).json({ status: false, errors: error });
   }
-
-  return res.status(StatusCodes.NOT_FOUND).json({ status: false, message: "No tour found with that id" });
 }
 
 export async function createTour(req: Request, res: Response) {
-  const parsed = TourBodySchema.safeParse(req.body);
-  const { success, error } = parsed;
+  try {
+    const newTour: TourBody = req.body;
 
-  if (!success) {
-    return res.status(StatusCodes.BAD_REQUEST).json({ status: false, errors: formatZodError(error) });
+    const createdTour = await Tour.create(newTour);
+
+    return res.status(201).json({ status: true, data: { tour: createdTour } });
+  } catch (error) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ status: false, errors: error });
   }
-
-  const newTour = req.body;
-  newTour.id = tours[tours.length - 1].id + 1;
-  tours.push(newTour);
-  await writeToJsonFile("src/dev-data/data/tours-simple.json", tours);
-  res.status(201).json({ status: true, data: { tour: newTour } });
 }
 
-export function updateTour(req: Request, res: Response) {
-  const { id } = req.params;
+export async function updateTour(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+    const data = req.body;
 
-  const tour = tours.find((tour) => tour.id === Number(id));
-
-  if (!tour) {
-    return res.status(StatusCodes.NOT_FOUND).json({ status: false, message: "No tour found with that id" });
+    const tour = await Tour.findByIdAndUpdate(id, data, { runValidators: true, new: true });
+    if (!tour) {
+      return res.status(StatusCodes.NOT_FOUND).json({ status: false, message: "No tour found with that id" });
+    }
+    return res.status(StatusCodes.OK).json({ status: true, message: "patched", data: { tour } });
+  } catch (error) {
+    return res.status(StatusCodes.NOT_FOUND).json({ status: false, message: "patched failed", errors: error });
   }
-
-  return res.status(StatusCodes.OK).json({ status: true, message: "patched" });
 }
 
-export function deleteTour(req: Request, res: Response) {
-  return res.status(StatusCodes.NO_CONTENT).json({ status: false });
+export async function deleteTour(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+    const tour = await Tour.findByIdAndDelete(id);
+
+    if (!tour) {
+      res.status(StatusCodes.NOT_FOUND).json({
+        status: false,
+        message: "No Tour found with that ID",
+      });
+    }
+
+    return res.status(StatusCodes.OK).json({ status: true, message: "Tour deleted successfully", data: { tour } });
+  } catch (error) {
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ status: false, message: "Something went wrong", error });
+  }
 }

@@ -2,6 +2,16 @@ import { NextFunction, Response, Request } from "express";
 import z from "zod";
 import { formatZodError } from "../helpers/helpers.js";
 
+declare module "express-serve-static-core" {
+  interface Request {
+    validated: {
+      body?: unknown;
+      query?: unknown;
+      params?: unknown;
+    };
+  }
+}
+
 type MiddlewareFunction = (req: Request, res: Response, next: NextFunction) => void;
 
 type ValidateInput = (
@@ -31,6 +41,7 @@ export const validateInput: ValidateInput =
       });
     }
 
+    req.validated = result.data;
     // Call the next middleware or route handler
     next();
   };
