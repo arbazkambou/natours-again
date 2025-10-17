@@ -1,6 +1,6 @@
-import { Document, model, Schema } from "mongoose";
-import { TourBody } from "./tour.schemas.js";
+import { model, Schema } from "mongoose";
 import slugify from "slugify";
+import { TourBody } from "./tour.schemas.js";
 
 export const tourSchema = new Schema<TourBody>(
   {

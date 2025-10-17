@@ -1,10 +1,10 @@
 import { importDevData } from "#dev-data/data/script.js";
 import { validateInput } from "#middlewares/validate-inputs.js";
+import { protectRoute } from "#modules/auth/auth.controller.js";
 import express from "express";
 import { createTour, deleteTour, getMonthlyPlan, getTour, getTours, getTourStats, updateTour } from "./tour.controller.js";
-import { DeleteTourSchema, GetAllToursSchema, GetSingleTourSchema, TourCreateSchema, TourQuerySchema, TourUpdateSchema } from "./tour.schemas.js";
+import { DeleteTourSchema, GetAllToursSchema, GetSingleTourSchema, TourCreateSchema, TourUpdateSchema } from "./tour.schemas.js";
 import { getTop5Tours } from "./tours.middleware.js";
-import { protectRoute } from "#modules/auth/auth.controller.js";
 
 const tourRouter = express.Router();
 
