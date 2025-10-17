@@ -10,3 +10,9 @@ const connectionString = process.env.CONNECTION_STRING as string;
     console.log(`App listening on port ${port}`);
   });
 })();
+
+process.on("unhandledRejection", (err: any) => {
+  console.error("UNHANDLED REJECTION 💥 Shutting down...");
+  console.error(err.name, err.message);
+  process.exit(1);
+});

@@ -16,6 +16,7 @@ export const TourBodySchema = z.object({
   images: z.array(z.string()).min(3, "Tour must have 3 images other than image cover"),
   startDates: z.array(z.string()).min(1, "Tour must have a start date"),
   createdAt: z.string().optional(),
+  slug: z.string().optional(),
 });
 
 export const TourParamsSchema = z.object({
