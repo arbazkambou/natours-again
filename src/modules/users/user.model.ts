@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { model, Schema } from "mongoose";
+import { model, Query, Schema } from "mongoose";
 import { UserType } from "./user.schema.js";
 
 export const userSchema = new Schema<UserType>({
@@ -41,6 +41,12 @@ export const userSchema = new Schema<UserType>({
   passwordResetTokenExprire: {
     type: Date,
   },
+
+  active: {
+    type: Boolean,
+    default: true,
+    select: false,
+  },
 });
 
 userSchema.pre("save", async function (next) {
@@ -55,6 +61,11 @@ userSchema.pre("save", async function (next) {
     return next();
   }
   this.passwordChangedAt = String(Date.now() - 1000);
+  next();
+});
+
+userSchema.pre(/^find/, function (this: Query<any, any>, next) {
+  this.find({ active: { $ne: false } });
   next();
 });
 

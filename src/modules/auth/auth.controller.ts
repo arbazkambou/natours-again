@@ -111,3 +111,27 @@ export const resetPassword = catchAsync(async (req: Request, res: Response, next
 
   return res.status(StatusCodes.OK).json({ status: true, message: "Password has been changed!", token: newToken });
 });
+
+export const updatePassword = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  // 1) Get current user
+  const user = await User.findById(req.user?._id).select("+password");
+  if (!user) {
+    return next(new AppError("No user found", StatusCodes.UNAUTHORIZED));
+  }
+
+  // 2) Compare password
+  const { newPassword, confirmPassword, currentPassword } = req.body;
+  const isPasswordCorrect = await bcrypt.compare(currentPassword, user.password);
+  if (!isPasswordCorrect) {
+    return next(new AppError("Please enter correct password", StatusCodes.BAD_REQUEST));
+  }
+  // 3) Update Password
+  user.password = newPassword;
+  user.confirmPassword = confirmPassword;
+  await user.save();
+
+  // 4) Send token
+  const token = generateJWT(user._id);
+
+  return res.status(StatusCodes.OK).json({ status: true, message: "Your password has been changed", token });
+});
