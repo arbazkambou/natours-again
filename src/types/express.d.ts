@@ -1,9 +1,9 @@
-import { UserDocument } from "#modules/users/user.model.js";
+import { UserType } from "#modules/users/user.schema.ts";
 
 declare global {
   namespace Express {
     interface Request {
-      user?: UserDocument;
+      user?: UserType;
       requestTime?: string;
     }
   }

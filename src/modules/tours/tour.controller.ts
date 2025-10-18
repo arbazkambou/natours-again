@@ -6,7 +6,7 @@ import { StatusCodes } from "http-status-codes";
 import { Tour } from "./tour.model.js";
 import { allowedTourFilters, TourBody, TourQuery } from "./tour.schemas.js";
 
-export const getTours = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const getTours = catchAsync(async (req: Request, res: Response) => {
   const queryData = req.validated?.query as TourQuery;
 
   const apiFeatures = new APIFeatures(Tour, queryData).filter(allowedTourFilters).limitFields();
@@ -82,7 +82,7 @@ export const deleteTour = catchAsync(async (req: Request, res: Response, next: N
   return res.status(StatusCodes.OK).json({ status: true, message: "Tour deleted successfully", data: { tour } });
 });
 
-export const getTourStats = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const getTourStats = catchAsync(async (req: Request, res: Response) => {
   const stats = await Tour.aggregate([
     {
       $match: {
