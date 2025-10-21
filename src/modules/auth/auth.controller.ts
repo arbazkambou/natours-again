@@ -1,6 +1,6 @@
 import { AppError } from "#helpers/appError.js";
 import { catchAsync } from "#helpers/catchAsync.js";
-import { generateJWT } from "#helpers/generateJWT.js";
+import { createAndSendToken } from "#helpers/createAndSendToken.js";
 import { sendEmail } from "#helpers/sendEmail.js";
 import { User } from "#modules/users/user.model.js";
 import { UserType } from "#modules/users/user.schema.js";
@@ -14,13 +14,10 @@ export const signUp = catchAsync(async (req: Request, res: Response) => {
 
   const newUser = await User.create({ email, name, password, confirmPassword, photo, passwordChangedAt });
 
-  const token = generateJWT(newUser._id);
+  newUser.password = undefined!;
+  newUser.confirmPassword = undefined!;
 
-  return res.status(StatusCodes.CREATED).json({
-    status: true,
-    token,
-    data: { user: { email: newUser.email, name: newUser.email, photo: newUser.photo, passwordChangedAt: newUser.passwordChangedAt } },
-  });
+  return createAndSendToken({ user: newUser, statusCode: StatusCodes.CREATED, message: "Account created successfully", res });
 });
 
 export const signIn = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -45,7 +42,9 @@ export const signIn = catchAsync(async (req: Request, res: Response, next: NextF
   }
 
   //3. Login the user
-  return res.status(StatusCodes.OK).json({ status: true, message: "Login successfully", token: generateJWT(user._id) });
+  // return res.status(StatusCodes.OK).json({ status: true, message: "Login successfully", token: generateJWT(user._id) });
+
+  return createAndSendToken({ user, statusCode: StatusCodes.OK, message: "Login successfully", res });
 });
 
 export const forgotPassword = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -107,9 +106,7 @@ export const resetPassword = catchAsync(async (req: Request, res: Response, next
 
   // 4) Update password changed at property in pre save documnet hook
   // 5) Generate new token for the user
-  const newToken = generateJWT(user._id);
-
-  return res.status(StatusCodes.OK).json({ status: true, message: "Password has been changed!", token: newToken });
+  return createAndSendToken({ user, statusCode: StatusCodes.OK, message: "Password reset successfully", res });
 });
 
 export const updatePassword = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -129,9 +126,9 @@ export const updatePassword = catchAsync(async (req: Request, res: Response, nex
   user.password = newPassword;
   user.confirmPassword = confirmPassword;
   await user.save();
+  user.password = undefined!;
+  user.confirmPassword = undefined!;
 
   // 4) Send token
-  const token = generateJWT(user._id);
-
-  return res.status(StatusCodes.OK).json({ status: true, message: "Your password has been changed", token });
+  return createAndSendToken({ user, statusCode: StatusCodes.OK, message: "Password has been changed!", res });
 });
