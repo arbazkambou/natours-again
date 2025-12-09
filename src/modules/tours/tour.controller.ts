@@ -1,8 +1,10 @@
 import { APIFeatures } from "#helpers/apiFeatures.js";
 import { AppError } from "#helpers/appError.js";
 import { catchAsync } from "#helpers/catchAsync.js";
+import { Review } from "#modules/reviews/reviews.model.js";
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
+import mongoose from "mongoose";
 import { Tour } from "./tour.model.js";
 import { allowedTourFilters, TourBody, TourQuery } from "./tour.schemas.js";
 
@@ -45,11 +47,15 @@ export const getTours = catchAsync(async (req: Request, res: Response) => {
 export const getTour = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const { id } = req.params;
 
-  const tour = await Tour.findById(id);
+  console.log("helo");
+
+  const tour = await Tour.findById(id).populate("guides").populate("reviews");
 
   if (!tour) {
     return next(new AppError("No tour found with that id", 404));
   }
+
+  return res.status(StatusCodes.OK).json({ status: true, data: tour });
 });
 
 export const createTour = catchAsync(async (req: Request, res: Response) => {
@@ -140,3 +146,32 @@ export const getMonthlyPlan = catchAsync(async (req: Request, res: Response) => 
   ]);
   return res.status(StatusCodes.OK).json({ status: true, data: { stats } });
 });
+
+export const updateTourRating = async (tourId: string) => {
+  const stats = await Review.aggregate([
+    {
+      $match: {
+        tour: new mongoose.Types.ObjectId(tourId),
+      },
+    },
+    {
+      $group: {
+        _id: "$tour",
+        nRating: { $sum: 1 },
+        avgRating: { $avg: "$rating" },
+      },
+    },
+  ]);
+
+  if (stats.length > 0) {
+    await Tour.findByIdAndUpdate(tourId, {
+      ratingsQuantity: stats[0].nRating,
+      ratingsAverage: stats[0].avgRating,
+    });
+  } else {
+    await Tour.findByIdAndUpdate(tourId, {
+      ratingsQuantity: 0,
+      ratingsAverage: 4.5,
+    });
+  }
+};

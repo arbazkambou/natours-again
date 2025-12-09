@@ -23,7 +23,7 @@ export const userSchema = new Schema<UserType>({
   },
   confirmPassword: {
     type: String,
-    required: true,
+    // required: true,
     select: false,
   },
   photo: {

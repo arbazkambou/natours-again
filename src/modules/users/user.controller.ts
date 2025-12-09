@@ -7,8 +7,14 @@ export const updateMe = catchAsync(async (req: Request, res: Response) => {
   // 1) get required field to update
   const { name, email } = req.body;
 
+  const uploadData: any = { name, email };
+
+  if (req.file) {
+    uploadData.photo = req.file.filename;
+  }
+
   // 2) update the current user
-  await User.findByIdAndUpdate(req.user?._id, { name, email });
+  await User.findByIdAndUpdate(req.user?._id, uploadData);
 
   // 3)  Return response
   res.status(StatusCodes.OK).json({ status: true, message: "Data Updated!" });

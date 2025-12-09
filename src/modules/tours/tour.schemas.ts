@@ -17,6 +17,36 @@ export const TourBodySchema = z.object({
   startDates: z.array(z.string()).min(1, "Tour must have a start date"),
   createdAt: z.string().optional(),
   slug: z.string().optional(),
+  startLocation: z
+    .object({
+      type: z.literal("Point").default("Point"),
+      coordinates: z
+        .tuple([z.number(), z.number()]) // GeoJSON always requires [lng, lat]
+        .refine((coords) => coords.length === 2, {
+          message: "Coordinates must be [longitude, latitude]",
+        }),
+      address: z.string().optional(),
+      description: z.string().optional(),
+    })
+    .optional(),
+
+  locations: z
+    .array(
+      z.object({
+        type: z.literal("Point").default("Point"),
+        coordinates: z
+          .tuple([z.number(), z.number()]) // GeoJSON always requires [lng, lat]
+          .refine((coords) => coords.length === 2, {
+            message: "Coordinates must be [longitude, latitude]",
+          }),
+        address: z.string().optional(),
+        description: z.string().optional(),
+        day: z.number(),
+      }),
+    )
+    .optional(),
+
+  guides: z.array(z.string()),
 });
 
 export const TourParamsSchema = z.object({

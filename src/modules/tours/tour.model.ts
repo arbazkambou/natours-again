@@ -71,6 +71,37 @@ export const tourSchema = new Schema<TourBody>(
       required: true,
     },
 
+    startLocation: {
+      type: {
+        type: String,
+        default: "Point",
+        enum: ["Point"],
+      },
+      coordinates: [Number],
+      address: String,
+      description: String,
+    },
+    locations: [
+      {
+        type: {
+          type: String,
+          default: "Point",
+          enum: ["Point"],
+        },
+        coordinates: [Number],
+        address: String,
+        description: String,
+        day: Number,
+      },
+    ],
+
+    guides: [
+      {
+        type: Schema.ObjectId,
+        ref: "User",
+      },
+    ],
+
     createdAt: {
       type: Date,
       default: Date.now(),
@@ -84,6 +115,12 @@ export const tourSchema = new Schema<TourBody>(
 
 tourSchema.virtual("durationInWeeks").get(function () {
   return (this.duration / 7).toFixed(1);
+});
+
+tourSchema.virtual("reviews", {
+  localField: "_id",
+  foreignField: "tour",
+  ref: "Review",
 });
 
 tourSchema.pre("save", function (next) {

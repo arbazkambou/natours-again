@@ -1,13 +1,18 @@
 import { importDevData } from "#dev-data/data/script.js";
+import { protectRoute } from "#middlewares/protectRoutes.js";
+import { resizeTourImges } from "#middlewares/resizeTourImages.js";
+import { restrictTo } from "#middlewares/restrictTo.js";
+import { uploadTourImages } from "#middlewares/uploadTourImages.js";
 import { validateInput } from "#middlewares/validate-inputs.js";
+import { reviewRouter } from "#modules/reviews/reviews.routes.js";
 import express from "express";
 import { createTour, deleteTour, getMonthlyPlan, getTour, getTours, getTourStats, updateTour } from "./tour.controller.js";
 import { DeleteTourSchema, GetAllToursSchema, GetSingleTourSchema, TourCreateSchema, TourUpdateSchema } from "./tour.schemas.js";
 import { getTop5Tours } from "./tours.middleware.js";
-import { protectRoute } from "#middlewares/protectRoutes.js";
-import { restrictTo } from "#middlewares/restrictTo.js";
 
 const tourRouter = express.Router();
+
+tourRouter.use("/:tourId/review", reviewRouter);
 
 tourRouter.route("/data").get(importDevData);
 
@@ -20,6 +25,6 @@ tourRouter
   .route("/:id")
   .get(validateInput(GetSingleTourSchema), getTour)
   .delete(protectRoute, restrictTo("admin", "lead-guide"), validateInput(DeleteTourSchema), deleteTour)
-  .patch(validateInput(TourUpdateSchema), updateTour);
+  .patch(protectRoute, restrictTo("admin", "lead-guide"), uploadTourImages, resizeTourImges, updateTour);
 
 export { tourRouter };
