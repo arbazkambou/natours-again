@@ -1,6 +1,7 @@
 import { AppError } from "#helpers/appError.js";
 import { globalErrorHandler } from "#helpers/globalErrorHandler.js";
 import { sanitizeUserInputs } from "#middlewares/sanitizeUserInputs.js";
+import { bookingRouter } from "#modules/booking/bookings.routes.js";
 import { reviewRouter } from "#modules/reviews/reviews.routes.js";
 import { tourRouter } from "#modules/tours/tour.routes.js";
 import { userRouter } from "#modules/users/user.routes.js";
@@ -60,6 +61,7 @@ app.use(`${API_PREFIX}`, apiLimiter);
 app.use(`${API_PREFIX}/tours`, tourRouter);
 app.use(`${API_PREFIX}/users`, userRouter);
 app.use(`${API_PREFIX}/review`, reviewRouter);
+app.use(`${API_PREFIX}/bookings`, bookingRouter);
 
 //Unhandled Routes
 app.use(function (req, res, next) {
