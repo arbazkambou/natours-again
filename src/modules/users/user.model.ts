@@ -10,6 +10,7 @@ export const userSchema = new Schema<UserType>({
   email: {
     type: String,
     required: true,
+    // unique: true,
   },
   role: {
     type: String,
@@ -44,7 +45,7 @@ export const userSchema = new Schema<UserType>({
 
   active: {
     type: Boolean,
-    default: true,
+    default: false,
     select: false,
   },
 });
@@ -64,9 +65,9 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-userSchema.pre(/^find/, function (this: Query<any, any>, next) {
-  this.find({ active: { $ne: false } });
-  next();
-});
+// userSchema.pre(/^find/, function (this: Query<any, any>, next) {
+//   this.find({ active: { $ne: false } });
+//   next();
+// });
 
 export const User = model("User", userSchema);

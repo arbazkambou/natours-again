@@ -1,12 +1,12 @@
-import { validateInput } from "#middlewares/validate-inputs.js";
-import { forgotPassword, resetPassword, signIn, signUp, updatePassword } from "#modules/auth/auth.controller.js";
-import express from "express";
-import { createUser, deleteMe, deleteUser, getUser, getUsers, updateMe, updateUser } from "./user.controller.js";
-import { createUserSchema, forgotPasswordSchema, resetPasswordSchema, updateMeSchema, updatePasswordSchema } from "./user.schema.js";
 import { protectRoute } from "#middlewares/protectRoutes.js";
+import { resizePhoto } from "#middlewares/resizePhoto.js";
 import { restrictTo } from "#middlewares/restrictTo.js";
 import { uploadPhoto } from "#middlewares/uploadPhoto.js";
-import { resizePhoto } from "#middlewares/resizePhoto.js";
+import { validateInput } from "#middlewares/validate-inputs.js";
+import { confirmEmail, forgotPassword, resetPassword, signIn, signUp, updatePassword } from "#modules/auth/auth.controller.js";
+import express from "express";
+import { createUser, deleteMe, deleteUser, getUser, getUsers, updateMe, updateUser } from "./user.controller.js";
+import { createUserSchema, forgotPasswordSchema, resetPasswordSchema, updatePasswordSchema } from "./user.schema.js";
 
 const userRouter = express.Router();
 
@@ -18,6 +18,7 @@ userRouter.route("/reset-password/:token").post(validateInput(resetPasswordSchem
 userRouter.route("/update-password").post(protectRoute, validateInput(updatePasswordSchema), updatePassword);
 userRouter.route("/update-me").patch(protectRoute, uploadPhoto, resizePhoto, updateMe);
 userRouter.route("/delete-me").delete(protectRoute, deleteMe);
+userRouter.route("/confirm-email/:token/user/:userId").get(confirmEmail);
 userRouter.route("/:id").get(getUser).patch(updateUser).delete(deleteUser);
 
 export { userRouter };

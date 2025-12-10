@@ -1,23 +1,37 @@
 import { AppError } from "#helpers/appError.js";
 import { catchAsync } from "#helpers/catchAsync.js";
 import { createAndSendToken } from "#helpers/createAndSendToken.js";
-import { sendEmail } from "#helpers/sendEmail.js";
+import Email from "#helpers/sendEmail.js";
 import { User } from "#modules/users/user.model.js";
 import { UserType } from "#modules/users/user.schema.js";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
+import jwt from "jsonwebtoken";
 
-export const signUp = catchAsync(async (req: Request, res: Response) => {
+export const signUp = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const { email, name, password, photo, confirmPassword, passwordChangedAt } = req.body as UserType;
+  const user = await User.findOne({ email });
+
+  if (user) {
+    if (!user.active) {
+      return next(new AppError("You have already registerd. Please confirm your email to activate your account", StatusCodes.BAD_REQUEST));
+    }
+
+    return next(new AppError("A user with this email address is already registered! Try another one.", StatusCodes.BAD_REQUEST));
+  }
 
   const newUser = await User.create({ email, name, password, confirmPassword, photo, passwordChangedAt });
 
   newUser.password = undefined!;
   newUser.confirmPassword = undefined!;
 
-  return createAndSendToken({ user: newUser, statusCode: StatusCodes.CREATED, message: "Account created successfully", res });
+  const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET as string, { expiresIn: "10m" });
+  const resetUrl = `${req.protocol}://${req.get("host")}/api/v1/users/confirm-email/${token}/user/${newUser._id}`;
+
+  await new Email({ email: newUser.email, name: newUser.name }).sendVerificationCode(resetUrl);
+  return res.status(StatusCodes.OK).json({ status: true, message: "Please confirm your email to activate your account" });
 });
 
 export const signIn = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -29,7 +43,7 @@ export const signIn = catchAsync(async (req: Request, res: Response, next: NextF
   }
 
   //2. Check if user exist and password is correct
-  const user = await User.findOne({ email }).select("+password");
+  const user = await User.findOne({ email }).select("+password +active");
 
   if (!user) {
     return next(new AppError("Invalid email or password", 401));
@@ -40,6 +54,14 @@ export const signIn = catchAsync(async (req: Request, res: Response, next: NextF
   if (!isPasswordCorrect) {
     return next(new AppError("Invalid email or password", 401));
   }
+
+  if (!user.active) {
+    return next(new AppError("Please activate your acoount", 401));
+  }
+
+  user.password = undefined!;
+  user.confirmPassword = undefined!;
+  user.active = undefined!;
 
   //3. Login the user
   // return res.status(StatusCodes.OK).json({ status: true, message: "Login successfully", token: generateJWT(user._id) });
@@ -65,14 +87,10 @@ export const forgotPassword = catchAsync(async (req: Request, res: Response, nex
   user.passwordResetTokenExprire = tokenExpiredAt;
   await user.save({ validateBeforeSave: false });
 
-  const fullUrl = `${req.protocol}://${req.get("host")}/users`;
-  const from = "arbazshoukat@codiea.io";
-  const to = user.email;
-  const text = `Open this link to reset your password ${fullUrl}/reset-password/${resetToken}`;
-  const subject = "Forgot password?";
+  const resetUrl = `${req.protocol}://${req.get("host")}/api/v1/users/reset-password/${resetToken}`;
 
   try {
-    await sendEmail({ from, to, subject, text });
+    await new Email({ name: user.name, email: user.email }, resetUrl).sendPasswordReset(resetUrl);
   } catch {
     user.passwordResetToken = undefined;
     user.passwordResetTokenExprire = undefined;
@@ -131,4 +149,32 @@ export const updatePassword = catchAsync(async (req: Request, res: Response, nex
 
   // 4) Send token
   return createAndSendToken({ user, statusCode: StatusCodes.OK, message: "Password has been changed!", res });
+});
+
+export const confirmEmail = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const token = req.params.token;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as any;
+
+    await User.findByIdAndUpdate(decoded.id as string, { active: true }).select("+active");
+
+    return res.status(StatusCodes.OK).json({ status: true, message: "Your email has been verified. Please login again" });
+  } catch (err: any) {
+    if (err.name === "TokenExpiredError") {
+      const token = jwt.sign({ id: req.params.userId }, process.env.JWT_SECRET as string, {
+        expiresIn: "10m",
+      });
+      const url = `${req.protocol}://${req.get("host")}/api/v1/users/confirm-email/${token}/user/${req.params.userId}`;
+      const newUser = await User.findById(req.params.userId);
+
+      if (newUser) {
+        await new Email({ email: newUser?.email, name: newUser?.name }, url).sendVerificationCode(url);
+      }
+      return next(new AppError("Tour token has been expired! Please check your email to activate your account.", 401));
+    } else if (err.name === "JsonWebTokenError") {
+      return next(new AppError("Invalid Token! Please login again.", 401));
+    } else {
+      return next(new AppError("Invalid Token! Please login again.", 401));
+    }
+  }
 });
