@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx --watch --env-file .env src/server.ts",
-    "start": "node --loader tsx/esm --loader tsconfig-paths/register dist/server.js",
+    "start": "node dist/server.js",
     "build": "tsc",
     "type-check": "tsc --noEmit",
     "lint": "eslint .",
