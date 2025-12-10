@@ -1,8 +1,0 @@
-{
-  "resolveFullPaths": true,
-  "replacers": {
-    "#(.*)": {
-      "target": "./dist/$1"
-    }
-  }
-}
