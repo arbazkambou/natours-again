@@ -14,7 +14,7 @@ const bookingSchema = new Schema({
 
   price: {
     type: Number,
-    required: [true, "A booking must have a price"],
+    required: [true, "A booking must have a priceeee"],
   },
 
   createdAt: {
