@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx --watch --env-file .env src/server.ts",
-    "start": "node --env-file .env dist/app.js",
+    "start": "node --env-file .env --import tsx/esm --import tsconfig-paths/register dist/server.js",
     "build": "tsc",
     "type-check": "tsc --noEmit",
     "lint": "eslint .",
@@ -50,6 +50,7 @@
     "sharp": "^0.34.5",
     "slugify": "^1.6.6",
     "stripe": "^20.0.0",
+    "tsconfig-paths": "^4.2.0",
     "xss-clean": "^0.1.4",
     "zod": "^4.0.17"
   },
