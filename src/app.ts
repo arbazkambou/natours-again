@@ -17,7 +17,7 @@ import path from "path";
 
 const app = express();
 
-app.use(cors);
+app.use(cors());
 
 const apiLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
