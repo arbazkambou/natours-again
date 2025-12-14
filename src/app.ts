@@ -1,10 +1,12 @@
 import { AppError } from "#helpers/appError.js";
 import { globalErrorHandler } from "#helpers/globalErrorHandler.js";
 import { sanitizeUserInputs } from "#middlewares/sanitizeUserInputs.js";
+import { verifyCheckoutSession } from "#modules/booking/bookings.controller.js";
 import { bookingRouter } from "#modules/booking/bookings.routes.js";
 import { reviewRouter } from "#modules/reviews/reviews.routes.js";
 import { tourRouter } from "#modules/tours/tour.routes.js";
 import { userRouter } from "#modules/users/user.routes.js";
+import cors from "cors";
 import express from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
@@ -14,6 +16,9 @@ import morgan from "morgan";
 import path from "path";
 
 const app = express();
+
+app.use(cors);
+
 const apiLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
   max: 10,
@@ -34,6 +39,8 @@ if (process.env.NODE_ENV === "developement") {
 app.set("trust proxy", 1);
 
 const API_PREFIX = process.env.API_PREFIX!;
+
+app.post("/webhook/stripe", express.raw({ type: "application/json" }), verifyCheckoutSession);
 
 app.use(express.json({ limit: "10kb" }));
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
