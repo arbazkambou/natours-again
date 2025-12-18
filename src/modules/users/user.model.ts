@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { model, Query, Schema } from "mongoose";
+import { model, Schema } from "mongoose";
 import { UserType } from "./user.schema.js";
 
 export const userSchema = new Schema<UserType>({

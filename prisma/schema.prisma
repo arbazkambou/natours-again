@@ -1,0 +1,141 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  User
+  Guide
+  Lead_Guide
+  Admin
+}
+
+enum UserStatus {
+  Active
+  InActive
+}
+
+enum TourDifficultyLevel {
+  Easy
+  Medium
+  Hard
+}
+
+model User {
+  id                        Int         @id @default(autoincrement())
+  name                      String
+  email                     String
+  role                      UserRole    @default(User)
+  password                  String
+  passwordChangedAt         DateTime?
+  confirmPassword           String
+  photo                     String?     @default("default.jpg")
+  passwordResetToken        String?
+  passwordResetTokenExprire DateTime?
+  active                    UserStatus  @default(InActive)
+  tourGuides                TourGuide[]
+  reviews                   Review[]
+  bookings                  Booking[]
+}
+
+model Tour {
+  id              Int                 @id @default(autoincrement())
+  name            String              @unique
+  slug            String?
+  duration        Int
+  maxGroupSize    Int
+  difficulty      TourDifficultyLevel
+  ratingsAverage  Float               @default(4.5)
+  ratingsQuantity Int                 @default(0)
+  price           Float
+  priceDisocunt   Float?
+  summary         String
+  description     String?
+  imageCover      String
+  tourImages      TourImage[]
+  startDates      StartDate[]
+  startLocations  StartLocation[]
+  guides          TourGuide[]
+  reviews         Review[]
+  bookings        Booking[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TourImage {
+  id        Int      @id @default(autoincrement())
+  url       String
+  tourId    Int
+  tour      Tour     @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StartDate {
+  id        Int      @id @default(autoincrement())
+  date      DateTime
+  tourId    Int
+  tour      Tour     @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StartLocation {
+  id          Int      @id @default(autoincrement())
+  type        String   @default("Point")
+  latitude    Float
+  longitude   Float
+  address     String?
+  description String
+  day         Int
+  tourId      Int
+  tour        Tour     @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model TourGuide {
+  id        Int      @id @default(autoincrement())
+  tourId    Int
+  tour      Tour     @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  review    String
+  rating    Int
+  tourId    Int
+  tour      Tour     @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tourId, userId])
+}
+
+model Booking {
+  id        String   @id @default(cuid())
+  price     Float
+  tourId    Int
+  tour      Tour     @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
