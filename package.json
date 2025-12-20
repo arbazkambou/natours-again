@@ -32,6 +32,8 @@
     ]
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
+    "@prisma/adapter-neon": "^7.2.0",
     "@prisma/client": "^7.2.0",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
@@ -53,6 +55,7 @@
     "slugify": "^1.6.6",
     "stripe": "^20.0.0",
     "tsconfig-paths": "^4.2.0",
+    "ws": "^8.18.3",
     "xss-clean": "^0.1.4",
     "zod": "^4.0.17"
   },
@@ -69,6 +72,7 @@
     "@types/node": "^24.2.1",
     "@types/nodemailer": "^7.0.2",
     "@types/sanitize-html": "^2.16.0",
+    "@types/ws": "^8.18.1",
     "eslint": "^9.33.0",
     "eslint-plugin-perfectionist": "^4.15.0",
     "husky": "^9.1.7",

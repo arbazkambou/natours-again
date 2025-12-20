@@ -1,9 +1,9 @@
-import { UserType } from "#types/express.js";
-import jwt from "jsonwebtoken";
+import { User } from "@prisma/client";
 import { Response } from "express";
+import jwt from "jsonwebtoken";
 
-export function createAndSendToken({ user, statusCode, res, message }: { user: UserType; statusCode: number; res: Response; message: string }) {
-  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET as string, {
+export function createAndSendToken({ user, statusCode, res, message }: { user: User; statusCode: number; res: Response; message: string }) {
+  const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET as string, {
     expiresIn: "90d",
   });
 
@@ -13,5 +13,7 @@ export function createAndSendToken({ user, statusCode, res, message }: { user: U
     httpOnly: true,
   });
 
-  return res.status(statusCode).json({ status: true, token, data: { user }, message });
+  const { name, email, active, photo, role, id } = user;
+
+  return res.status(statusCode).json({ status: true, token, data: { name, email, active, photo, role, id }, message });
 }

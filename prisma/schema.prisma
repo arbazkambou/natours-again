@@ -6,7 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
+  // output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -34,11 +34,10 @@ enum TourDifficultyLevel {
 model User {
   id                        Int         @id @default(autoincrement())
   name                      String
-  email                     String
+  email                     String      @unique
   role                      UserRole    @default(User)
   password                  String
   passwordChangedAt         DateTime?
-  confirmPassword           String
   photo                     String?     @default("default.jpg")
   passwordResetToken        String?
   passwordResetTokenExprire DateTime?

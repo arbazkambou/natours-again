@@ -1,7 +1,7 @@
 import { AppError } from "#helpers/appError.js";
 import { catchAsync } from "#helpers/catchAsync.js";
 import { isPasswordChangedAfter } from "#helpers/isPasswordChangedAfter.js";
-import { User } from "#modules/users/user.model.js";
+import { prisma } from "#lib/prisma.js";
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import jwt from "jsonwebtoken";
@@ -23,7 +23,8 @@ export const protectRoute = catchAsync(async function (req: Request, res: Respon
   const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as any;
 
   // 3) Check if user still exists
-  const user = await User.findById(decoded.id);
+  // const user = await User.findById(decoded.id);
+  const user = await prisma.user.findUnique({ where: { id: decoded.id } });
 
   if (!user) {
     return next(new AppError("User does not exist with this token! Please login.", 401));

@@ -29,7 +29,7 @@ export const resizeTourImges = catchAsync(async (req: Request, res: Response, ne
   const imageCoverFile = files.imageCover[0];
   const timestamp = Date.now();
 
-  const imageCoverFileName = `${req.user?._id}-${timestamp}-cover.jpeg`;
+  const imageCoverFileName = `${req.user?.id}-${timestamp}-cover.jpeg`;
   const coverUrl = `${req.protocol}://${req.get("host")}/uploads/${imageCoverFileName}`;
 
   req.body.imageCover = coverUrl;
@@ -43,7 +43,7 @@ export const resizeTourImges = catchAsync(async (req: Request, res: Response, ne
 
   await Promise.all(
     files.images.map(async (file, i) => {
-      const fileName = `${req.user?._id}-${timestamp}-tour-${i + 1}.jpeg`;
+      const fileName = `${req.user?.id}-${timestamp}-tour-${i + 1}.jpeg`;
       const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${fileName}`;
 
       await sharp(file.buffer).resize(2000, 1333).toFormat("jpeg").jpeg({ quality: 90 }).toFile(path.join(uploadFolder, fileName));

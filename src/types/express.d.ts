@@ -1,4 +1,5 @@
 import { userSchema } from "#modules/users/user.model.ts";
+import { User } from "@prisma/client";
 import { InferSchemaType } from "mongoose";
 
 export type UserType = InferSchemaType<typeof userSchema>;
@@ -6,7 +7,7 @@ export type UserType = InferSchemaType<typeof userSchema>;
 declare global {
   namespace Express {
     interface Request {
-      user?: UserType;
+      user?: User;
       requestTime?: string;
     }
   }

@@ -1,6 +1,7 @@
 import { AppError } from "#helpers/appError.js";
 import { catchAsync } from "#helpers/catchAsync.js";
 import { stripe } from "#helpers/stripe.js";
+import { prisma } from "#lib/prisma.js";
 import { Tour } from "#modules/tours/tour.model.js";
 import { User } from "#modules/users/user.model.js";
 import { NextFunction, Request, Response } from "express";
@@ -8,7 +9,7 @@ import Stripe from "stripe";
 import { Booking } from "./bookings.model.js";
 
 export const createCheckoutSession = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const tour = await Tour.findById(req.params.tourId);
+  const tour = await prisma.tour.findUnique({ where: { id: Number(req.params.tourId) } });
 
   if (!tour) {
     return next(new AppError("No tour found with this id", 401));

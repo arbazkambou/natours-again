@@ -1,7 +1,7 @@
-import { UserType } from "#modules/users/user.schema.js";
+import { User } from "@prisma/client";
 import { isAfter } from "date-fns";
 
-export function isPasswordChangedAfter(user: UserType, jwtTimeStamp: number) {
+export function isPasswordChangedAfter(user: User, jwtTimeStamp: number) {
   if (user.passwordChangedAt) {
     const passwordChangedAt = new Date(user.passwordChangedAt);
     const jwtIssuedAt = new Date(jwtTimeStamp * 1000);

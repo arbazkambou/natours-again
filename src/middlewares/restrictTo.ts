@@ -2,7 +2,7 @@ import { AppError } from "#helpers/appError.js";
 import { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 
-export type Role = "user" | "admin" | "guide" | "lead-guide";
+export type Role = "User" | "Admin" | "Guide" | "Lead_Guide";
 
 export const restrictTo =
   (...roles: Role[]) =>
